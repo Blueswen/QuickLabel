@@ -47,10 +47,18 @@
       }
 
       $(function() {
+
+        alert("已啟用快速功能，方向左鍵是圈，方向右鍵是叉");
+
         $("#next").click(function() {
-          current++;
-          updateProgress(current,targetlist.targetname.length);
-          labeling(current);
+          if(current>=targetlist.targetname.length) {
+            alert("已經全部標記完畢");
+          }
+          else {
+            current++;
+            updateProgress(current,targetlist.targetname.length);
+            labeling(current);
+          }
         })
 
         $("#ans-O").click(function() {
@@ -72,6 +80,27 @@
             $("#ans").val("X");
             $("#next").click();
           }
+        });
+
+        $(document).keydown(function(e) {
+            switch(e.which) {
+                case 37: // left
+                $("#ans-O").click();
+                break;
+
+                case 38: // up
+                break;
+
+                case 39: // right
+                $("#ans-X").click();
+                break;
+
+                case 40: // down
+                break;
+
+                default: return; // exit this handler for other keys
+            }
+            e.preventDefault(); // prevent the default action (scroll / move caret)
         });
       });
 
