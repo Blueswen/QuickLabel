@@ -51,11 +51,11 @@
         alert("已啟用快速功能，方向左鍵是圈，方向右鍵是叉");
 
         $("#next").click(function() {
+          current++;
           if(current>=targetlist.targetname.length) {
             alert("已經全部標記完畢");
           }
           else {
-            current++;
             updateProgress(current,targetlist.targetname.length);
             labeling(current);
           }
@@ -99,7 +99,7 @@
                 break;
 
                 default: return; // exit this handler for other keys
-            }
+            }bl
             e.preventDefault(); // prevent the default action (scroll / move caret)
         });
       });
