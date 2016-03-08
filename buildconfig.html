@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>BuildConfig</title>
+    <script src="js/async.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" crossorigin="anonymous">
+  </head>
+  <body>
+    <form>
+      <div class="form-group">
+        <label for="formurl">Google Form URL</label>
+        <input type="text" id="formurl" value="https://docs.google.com/forms/d/1P99J9KUX6noQqzwkZjcVnQAIAtLbsOtywdc-MfMJwMk/viewform">
+      </div>
+      <div class="form-group">
+        <label for="filelist">Target Files</label>
+        <input type="file" id="files" value="" multiple="multiple">
+      </div>
+      <button id="download" type="button" name="button">Download Config</button>
+    </form>
+  </body>
+  <script type="text/javascript">
+    $("#download").click(downLoadClick);
+
+    function downLoadClick(){
+      var config = {};
+      var formHTML;
+
+      async.series([
+        configInit,
+        getFormHTML,
+        parseGoogelForm,
+        downLoad
+      ]);
+
+      function configInit(callback) {
+        var files = $('#files').prop("files");
+        var fileList = $.map(files, function(val) { return val.name; });
+        var url = $('#formurl').val();
+        config = {
+          "googleForm": {
+            "url": url,
+            "fields": []
+          },
+          "targetName": fileList
+        };
+        callback(null);
+      }
+
+      function getFormHTML(callback) {
+        $.ajaxSetup({
+            scriptCharset: "utf-8", //or "ISO-8859-1"
+            contentType: "application/json; charset=utf-8"
+        });
+        $.getJSON('http://whateverorigin.org/get?url=' +
+            encodeURIComponent(config.googleForm.url) + '&callback=?',
+            function (data) {
+              formHTML = data.contents;
+              callback(null);
+        });
+      }
+
+      function parseGoogelForm(callback) {
+        //url: google form url
+        //return: google form structure json
+
+        var fields = $($.parseHTML(formHTML)).find("form input[name^='entry']"); //input name start with entry
+        var fm = [];
+        fields.each(function( i, d ) {
+          fm.push(d.name);
+        });
+        config.googleForm.fields = fm;
+        callback(null);
+      }
+
+      function downLoad() {
+        var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
+        var a = document.createElement('a');
+        a.display = 'none';
+        a.href = 'data:' + data;
+        a.download = 'config.json';
+
+        a.click();
+      }
+    };
+
+  </script>
+</html>
