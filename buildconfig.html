@@ -9,30 +9,112 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" crossorigin="anonymous">
   </head>
   <body>
-    <form>
-      <div class="form-group">
-        <label for="formurl">Google Form URL</label>
-        <input type="text" id="formurl" value="https://docs.google.com/forms/d/1P99J9KUX6noQqzwkZjcVnQAIAtLbsOtywdc-MfMJwMk/viewform">
+    <div class="row">
+      <div class="col-md-10 col-md-offset-1">
+        <form>
+          <div class="form-group">
+            <label for="formurl">Google Form URL</label>
+            <input class="form-control" type="text" id="formurl" value="https://docs.google.com/forms/d/1P99J9KUX6noQqzwkZjcVnQAIAtLbsOtywdc-MfMJwMk/viewform">
+            <button class="btn btn-default" type="button" id="parse" name="button">Parse</button>
+          </div>
+          <div class="form-group">
+            <label for="filelist">Target Files</label>
+            <input type="file" id="files" value="" multiple="multiple">
+          </div>
+        </form>
+        <div id="fieldsSetting">
+          <div class="form-group">
+            <label for="fileNameSel">File Name Field</label>
+            <select id="fileNameSel" class="formSel form-control" name="">
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="testerNameSel">Tester Name Field</label>
+            <select id="testerNameSel" class="formSel form-control" name="">
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ratingSel">Rating Field</label>
+            <select id="ratingSel" class="formSel form-control" name="">
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="numCat">Number of Category</label>
+            <input id="numCat" class="form-control" type="text" value="2">
+          </div>
+          <div class="form-group">
+            <table id="opTable" class="table table-bordered">
+              <tr id="tb-val">
+                <td>Value</td>
+                <td>1</td>
+                <td>2</td>
+              </tr>
+              <tr id="tb-label">
+                <td>Label</td>
+                <td><input type="text" class="form-control" value="1"></td>
+                <td><input type="text" class="form-control" value="2"></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <button class="btn btn-default" id="download" type="button" name="button">Download Config</button>
       </div>
-      <div class="form-group">
-        <label for="filelist">Target Files</label>
-        <input type="file" id="files" value="" multiple="multiple">
-      </div>
-      <button id="download" type="button" name="button">Download Config</button>
-    </form>
+    </div>
   </body>
   <script type="text/javascript">
+    var config = {};
+    $("#parse").click(parseClick);
     $("#download").click(downLoadClick);
 
-    function downLoadClick(){
-      var config = {};
+    $("#numCat").change(function(){
+      if( isNaN($("#numCat").val()) ){
+        alert("Number of Category must be number.");
+      }
+      else if( $("#numCat").val() > 9 || $("#numCat").val() < 2 ){
+        alert("Number of Category must between 2 to 9.");
+      }
+      else{
+        $("#tb-val").html("<td>Value</td>");
+        $("#tb-label").html("<td>Label</td>");
+        for (var i = 0; i < $("#numCat").val(); i++) {
+          $("#tb-val").append("<td>" + (i+1) + "</td>");
+        }
+        for (var i = 0; i < $("#numCat").val(); i++) {
+          $("#tb-label").append("<td><input type='text' class='form-control' value=" + (i+1) + "></td>");
+        }
+      }
+    });
+
+    function downLoadClick() {
+
+      // Get fields setting and category number setting
+      config.fields.fileName = $("#fileNameSel").val()
+      config.fields.testerName = $("#testerNameSel").val()
+      config.fields.rating = $("#ratingSel").val()
+
+      var ratingLabel = $("#tb-label input");
+      for (var i = 0; i < ratingLabel.length; i++) {
+        config.label.push( $(ratingLabel[i]).val() );
+      }
+
+      // Build configJSON
+      var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
+      var a = document.createElement('a');
+      a.display = 'none';
+      a.href = 'data:' + data;
+      a.download = 'config.json';
+
+      a.click();
+    }
+
+    function parseClick(){
       var formHTML;
 
       async.series([
         configInit,
         getFormHTML,
         parseGoogelForm,
-        downLoad
+        setFiledOptions
       ]);
 
       function configInit(callback) {
@@ -44,7 +126,9 @@
             "url": url,
             "fields": []
           },
-          "targetName": fileList
+          "targetName": fileList,
+          "fields": { "fileName":null, "testerName":null, "rating":null},
+          "label": []
         };
         callback(null);
       }
@@ -75,14 +159,13 @@
         callback(null);
       }
 
-      function downLoad() {
-        var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
-        var a = document.createElement('a');
-        a.display = 'none';
-        a.href = 'data:' + data;
-        a.download = 'config.json';
-
-        a.click();
+      function setFiledOptions() {
+        var options = config.googleForm.fields.map(function(f) {
+          return "<option value=" + f + ">" + f + "</option>";
+        });
+        options.forEach(function(o){
+          $(".formSel").append(o);
+        });
       }
     };
 
