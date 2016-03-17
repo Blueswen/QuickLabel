@@ -87,7 +87,7 @@
 
     function downLoadClick() {
 
-      // Get fields setting and category number setting
+      // Get fields setting ,category number setting and file list
       config.fields.fileName = $("#fileNameSel").val()
       config.fields.testerName = $("#testerNameSel").val()
       config.fields.rating = $("#ratingSel").val()
@@ -96,6 +96,10 @@
       for (var i = 0; i < ratingLabel.length; i++) {
         config.label.push( $(ratingLabel[i]).val() );
       }
+
+      var files = $('#files').prop("files");
+      var fileList = $.map(files, function(val) { return val.name; });
+      config.fileList = fileList;
 
       // Build configJSON
       var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
@@ -118,15 +122,13 @@
       ]);
 
       function configInit(callback) {
-        var files = $('#files').prop("files");
-        var fileList = $.map(files, function(val) { return val.name; });
         var url = $('#formurl').val();
         config = {
           "googleForm": {
             "url": url,
             "fields": []
           },
-          "targetName": fileList,
+          "targetName": null,
           "fields": { "fileName":null, "testerName":null, "rating":null},
           "label": []
         };
